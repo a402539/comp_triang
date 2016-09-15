@@ -1,5 +1,4 @@
-inter_disks
+comp_triang
 ===========
 
-Play around with intersections of disks.  Honestly, mostly just convex
-hull stuff at this point.
+Play around with compatible triangulations.

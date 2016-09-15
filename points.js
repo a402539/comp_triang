@@ -53,10 +53,10 @@ var Points = (function() {
         return true;
     };
     function cmpIncX(a,b) {
-        return b.x - a.x;
+        return a.x - b.x;
     }
     function cmpIncY(a,b) {
-        return b.y - a.y;
+        return a.y - b.y;
     }
     function planeSweep(points, fn, cmpFn) {
         if(cmpFn === undefined) {
@@ -71,9 +71,7 @@ var Points = (function() {
     //////////////////////////////////////////////////////////////////////
     // Voronoi
     function voronoi(points) {
-        var t = new AVL(function(a,b) {
-            return a.x - b.x;
-        });
+        var q = Heap(points.slice(0), cmpIncY);
         var output = [];
         // TODO
         return output;

@@ -1,5 +1,4 @@
 "use strict";
-
 var Heap = function(arr, cmpFn) {
     if(arr === undefined) {
         arr = [];

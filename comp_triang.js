@@ -1,16 +1,14 @@
 "use strict";
 (function() {
     var pointRadius = 5;
-    var circleRadius = 300;
     
     var canvas = document.getElementById('c');
     var context = canvas.getContext('2d');
-    var draw_centers = document.getElementById('draw_centers');
-    var draw_circles = document.getElementById('draw_circles');
+    var draw_points = document.getElementById('draw_points');
     var high_ch_points = document.getElementById('high_ch_points');
     var draw_ch_edges = document.getElementById('draw_ch_edges');
     var checkboxes = [
-        draw_centers, draw_circles, high_ch_points, draw_ch_edges
+        draw_points, high_ch_points, draw_ch_edges
     ];
     var centers = [];
 
@@ -30,14 +28,6 @@
         context.fill();
     }
 
-    function strokeBigCircle(context, x, y, color) {
-        context.beginPath();
-        context.arc(x, y, circleRadius, 0, 2 * Math.PI, false);
-        context.lineWidth = 1;
-        context.strokeStyle = color;
-        context.stroke();
-    }
-
     function draw() {
         (function() {
             console.log('clearing');
@@ -47,11 +37,7 @@
         console.log('drawing');
         for(var i = 0; i < centers.length; ++i) {
             var center = centers[i];
-            if(draw_circles.checked) {
-                console.log('drawing circles');
-                strokeBigCircle(context, center.x, center.y, 'gray');
-            }
-            if(draw_centers.checked) {
+            if(draw_points.checked) {
                 console.log('drawing centers');
                 fillLittleCircle(context, center.x, center.y, 'green');
             }
