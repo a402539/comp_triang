@@ -16,13 +16,19 @@
   <body>
     <canvas id="c" width="950" height="650"></canvas>
     <br>
-    <button id="clear">Clear</button>
+    <input id="add_points" type="radio" name="add_group"
+           value="add_points" checked>
+    Add Points
+    <input id="add_edges" type="radio" name="add_group"
+           value="add_edges">
+    Add Edges
     <input id="draw_points" type="checkbox" checked>
     <label for="draw_points">Draw Points</label>
-    <input id="high_ch_points" type="checkbox">
+    <input id="high_ch_points" type="checkbox" checked>
     <label for="high_ch_points">Highlight CH Points</label>
-    <input id="draw_ch_edges" type="checkbox">
+    <input id="draw_ch_edges" type="checkbox" checked>
     <label for="draw_ch_edges">Draw CH Edges</label>
+    <button id="clear">Clear</button>
   </body>
   <script src="common.js"></script>
   <script src="bst.js"></script>

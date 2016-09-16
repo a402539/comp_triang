@@ -2,3 +2,13 @@ comp_triang
 ===========
 
 Play around with compatible triangulations.
+
+Features:
+
+ - [X] click to add/remove points
+ - [X] computes convex hull
+ - [X] click to add edges
+ - [ ] label CH point
+ - [ ] two point sets
+ - [ ] verify input is triangulated
+ - [ ] check for compatibility
