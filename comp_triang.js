@@ -6,13 +6,6 @@
     var context = canvas.getContext('2d');
 
     var add = null;
-    var draw_points = document.getElementById('draw_points');
-    var high_ch_points = document.getElementById('high_ch_points');
-    var draw_ch_edges = document.getElementById('draw_ch_edges');
-    var checkboxes = [
-        draw_points, high_ch_points, draw_ch_edges
-    ];
-
     function getRadioValue() {
         add = document.querySelector('input[name="add_group"]:checked').value;
         console.log('Radio value: ' + add);
@@ -58,23 +51,16 @@
         console.log('drawing');
         for(var i = 0; i < points.length; ++i) {
             var point = points[i];
-            if(draw_points.checked) {
-                drawPoint(context, point.x, point.y, 'green');
-            }
+            drawPoint(context, point.x, point.y, 'green');
         }
         for(var i = 1; i < chPoints.length; ++i) {
             var pt1 = chPoints[i-1];
             var pt2 = chPoints[i];
-            if(high_ch_points.checked) {
-                if(i == 2) {
-                    drawPoint(context, pt1.x, pt1.y, 'blue');
-                }
-                drawPoint(context, pt2.x, pt2.y, 'blue');
+            if(i == 2) {
+                drawPoint(context, pt1.x, pt1.y, 'blue');
             }
-
-            if(draw_ch_edges.checked) {
-                drawEdge(context, pt1, pt2);
-            }
+            drawPoint(context, pt2.x, pt2.y, 'blue');
+            drawEdge(context, pt1, pt2);
         }
         for(var i = 0; i < edges.length; ++i) {
             var e = edges[i];
@@ -182,14 +168,5 @@
             console.error('Invalid add_group value');
         }
         draw();
-    });
-
-    //////////////////////////////////////////////////////////////////////
-
-    checkboxes.forEach(function(cbox) {
-        cbox.addEventListener('click', function(evt) {
-            console.log('Clicked checkbox');
-            draw();
-        });
     });
 })();

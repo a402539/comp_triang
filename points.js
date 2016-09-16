@@ -67,15 +67,5 @@ var Points = (function() {
         }
         points.forEach(fn);
     }
-
-    //////////////////////////////////////////////////////////////////////
-    // Voronoi
-    function voronoi(points) {
-        var q = Heap(points.slice(0), cmpIncY);
-        var output = [];
-        // TODO
-        return output;
-    }
-
-    return {convexHull:convexHull, voronoi:voronoi};
+    return {convexHull:convexHull};
 })();
