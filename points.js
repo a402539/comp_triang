@@ -1,5 +1,8 @@
 "use strict";
 var Points = (function() {
+    // A point is any object with x and y values, such as:
+    // {x: 0, y: 0}
+    
     //////////////////////////////////////////////////////////////////////
     // Convex Hull
     
@@ -58,17 +61,26 @@ var Points = (function() {
     function cmpIncY(a,b) {
         return a.y - b.y;
     }
-    function planeSweep(points, fn, cmpFn) {
+    function sortPoints(points, cmpFn) {
         if(cmpFn === undefined) {
             cmpFn = cmpIncX;
         }
         if(!points.isSorted(cmpFn)) {
             points.sort(cmpFn);
         }
+    }
+    function planeSweep(points, fn, cmpFn) {
+        sortPoints(points, cmpFn);
         points.forEach(fn);
     }
-    return {convexHull:convexHull,
+    function toString(point) {
+        return '(' + point.x + ',' + point.y + ')';        
+    }
+    return {isLeftTurn:isLeftTurn,
+            convexHull:convexHull,
             cmpIncX:cmpIncX,
             cmpIncY:cmpIncY,
-            planeSweep:planeSweep};
+            sortPoints:sortPoints,
+            planeSweep:planeSweep,
+            toString:toString};
 })();
