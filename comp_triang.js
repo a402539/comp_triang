@@ -113,12 +113,29 @@
         return '(' + p.x + ',' + p.y + ')';
     }
 
+    function removePoint(index) {
+        var new_edges = [];
+        for(var i = 0; i < edges.length; ++i) {
+            var e = edges[i];
+            if(e[0] === index || e[1] === index) {
+                console.log('Deleting edge ' + i);
+            } else {
+                new_edges.push(e);
+            }
+        }
+        edges = new_edges;
+        points.splice(index, 1);
+        if(selected_point === index) {
+            selected_point = -1;
+        }
+    }
+
     function addPoint(p) {
         var clicked_point = findClickedPoint(p);
         console.log('Clicked point: ' + clicked_point);
         if(clicked_point > -1) {
             console.log('deleting point');
-            points.splice(clicked_point, 1);
+            removePoint(clicked_point);
         } else {
             points.push(p);
             sortPoints(points);
