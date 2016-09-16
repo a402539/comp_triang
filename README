@@ -8,6 +8,7 @@ Features:
  - [X] click to add/remove points
  - [X] computes convex hull
  - [X] click to add edges
+ - [X] click to delete edges
  - [ ] label CH point
  - [ ] two point sets
  - [ ] verify input is triangulated

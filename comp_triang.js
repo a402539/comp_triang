@@ -25,6 +25,8 @@
 
     function clear() {
         points = [];
+        selected_point = -1;
+        edges = [];
         draw();
     }
 
@@ -110,12 +112,12 @@
         var threshold = Math.pow(pointRadius, 2) + fudgeFactor;
         for(var i = 0; i < points.length; ++i) {
             var candidate = points[i];
-            console.log('Candidate: (' + candidate.x + ',' + candidate.y + ')');
+            //console.log('Candidate: (' + candidate.x + ',' + candidate.y + ')');
             var sqrDist = sqrDistance(p, candidate);
-            console.log('Distance: ' + sqrDist);
-            console.log('Threshold: ' + threshold);
+            //console.log('Distance: ' + sqrDist);
+            //console.log('Threshold: ' + threshold);
             if(threshold > sqrDist) {
-                console.log('===== FOUND');
+                //console.log('===== FOUND');
                 return i;
             }
         }
@@ -144,13 +146,15 @@
                 console.log('Selecting point');
                 selected_point = clicked_point;
             } else {
-                console.log('Adding edge');
                 var new_edge = [selected_point, clicked_point];
-                new_edge.sort(function(a,b) { return b - a; });
+                new_edge.sort(function(a,b) { return a - b; } );
+                console.log('New edge: ' + new_edge);
                 var found = -1;
                 for(var i = 0; i < edges.length; ++i) {
                     var e = edges[i];
-                    if(new_edge[0] in e && new_edge[1] in e) {
+                    console.log('Old edge: ' + e);
+                    if(new_edge[0] === e[0] && new_edge[1] === e[1]) {
+                        console.log('Found edge');
                         found = i;
                         break;
                     }
@@ -159,6 +163,7 @@
                     console.log('Deleting edge');
                     edges.splice(found, 1);
                 } else {
+                    console.log('Adding edge');
                     edges.push(new_edge);
                 }
             }
