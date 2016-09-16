@@ -13,6 +13,7 @@
     getRadioValue();
     
     var points = [];
+    var chPoints = [];
     var selected_point = -1;
     var edges = [];
 
@@ -47,7 +48,7 @@
             console.log('clearing');
             context.clearRect(0, 0, canvas.width, canvas.height);
         })();
-        var chPoints = Points.convexHull(points);
+        chPoints = Points.convexHull(points);
         console.log('drawing');
         for(var i = 0; i < points.length; ++i) {
             var point = points[i];
@@ -83,10 +84,8 @@
         };
     }
 
-    function sortPoints() {
-        points.sort(function(a,b) {
-            return b.x - a.x;
-        });
+    function sortPoints(pts) {
+        pts.sort(Points.cmpIncX);
     }
 
     function sqrDistance(a, b) {
@@ -110,6 +109,10 @@
         return -1;
     }
 
+    function pts(p) {
+        return '(' + p.x + ',' + p.y + ')';
+    }
+
     function addPoint(p) {
         var clicked_point = findClickedPoint(p);
         console.log('Clicked point: ' + clicked_point);
@@ -118,7 +121,7 @@
             points.splice(clicked_point, 1);
         } else {
             points.push(p);
-            sortPoints();
+            sortPoints(points);
         }
     }
 
@@ -149,8 +152,27 @@
                     console.log('Deleting edge');
                     edges.splice(found, 1);
                 } else {
-                    console.log('Adding edge');
-                    edges.push(new_edge);
+                    var pt1 = points[new_edge[0]];
+                    var pt2 = points[new_edge[1]];
+                    console.log('=== CH check');
+                    console.log('pt1: ' + pts(pt1) + ', pt2: ' + pts(pt2));
+                    var onCH = false;
+                    for(var i = 1; i < chPoints.length; ++i) {
+                        var ch1 = chPoints[i-1];
+                        var ch2 = chPoints[i];
+                        console.log('ch1: ' + pts(ch1) + ', ch2: ' + pts(ch2));
+                        if(pt1 === ch1 && pt2 === ch2 ||
+                           pt1 === ch2 && pt2 ===ch1) {
+                            console.log('Added edge on CH');
+                            onCH = true;
+                            break;
+                        }
+                    }
+                    console.log('===');
+                    if(!onCH){
+                        console.log('Adding edge');
+                        edges.push(new_edge);
+                    }
                 }
             }
         }            

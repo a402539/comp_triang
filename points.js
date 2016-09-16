@@ -67,5 +67,8 @@ var Points = (function() {
         }
         points.forEach(fn);
     }
-    return {convexHull:convexHull};
+    return {convexHull:convexHull,
+            cmpIncX:cmpIncX,
+            cmpIncY:cmpIncY,
+            planeSweep:planeSweep};
 })();
