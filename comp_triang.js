@@ -183,10 +183,8 @@
                     }
                     console.log('===');
                     if(!onCH) {
-                        var addEdge = true;
                         var a = Edges.crossesEdges(new_edge, edges, points);
                         if(a) {
-                            addEdge = false;
                             var e = a[0];
                             var p = a[1];
                             console.log('Crosses edge: ' + e);
@@ -196,14 +194,7 @@
                                         pts(p0) + ' ' +
                                         pts(p1));
                             console.log('At point:     ' + pts(p));
-                            
-                            if(p.x === p0.x && p.y === p0.y ||
-                               p.x === p1.x && p.y === p1.y) {
-                                console.log('Intersection at endpoint');
-                                addEdge = true;
-                            }
-                        }
-                        if(addEdge) {
+                        } else {
                             console.log('Adding edge');
                             edges.push(new_edge);
                         }

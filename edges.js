@@ -51,6 +51,15 @@ var Edges = (function() {
         var t = t_numer / denom;
 
         var p = {x: p0.x + (t * s10_x), y: p0.y + (t * s10_y)};
+
+        if(p.x === p0.x && p.y === p0.y ||
+           p.x === p1.x && p.y === p1.y ||
+           p.x === p2.x && p.y === p2.y ||
+           p.x === p3.x && p.y === p3.y) {
+            // intersection at endpoint doesn't count
+            return false;
+        }
+        
         return p;
     }
     
