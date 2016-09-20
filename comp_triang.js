@@ -1,6 +1,8 @@
 "use strict";
 (function() {
+    // configuration
     var pointRadius = 5;
+    var clickBox = 60;
     
     var canvas = document.getElementById('c');
     var context = canvas.getContext('2d');
@@ -89,8 +91,7 @@
     }
 
     function findClickedPoint(p) {
-        var fudgeFactor = 10;
-        var threshold = Math.pow(pointRadius, 2) + fudgeFactor;
+        var threshold = Math.pow(pointRadius, 2) + clickBox;
         console.log('=== clicked point check')
         for(var i = 0; i < points.length; ++i) {
             var candidate = points[i];
@@ -182,10 +183,27 @@
                     }
                     console.log('===');
                     if(!onCH) {
-                        var e = Edges.crossesEdges(new_edge, edges, points);
-                        if(e) {
+                        var addEdge = true;
+                        var a = Edges.crossesEdges(new_edge, edges, points);
+                        if(a) {
+                            addEdge = false;
+                            var e = a[0];
+                            var p = a[1];
                             console.log('Crosses edge: ' + e);
-                        } else {
+                            var p0 = points[e[0]];
+                            var p1 = points[e[1]];
+                            console.log('Between points: ' +
+                                        pts(p0) + ' ' +
+                                        pts(p1));
+                            console.log('At point:     ' + pts(p));
+                            
+                            if(p.x === p0.x && p.y === p0.y ||
+                               p.x === p1.x && p.y === p1.y) {
+                                console.log('Intersection at endpoint');
+                                addEdge = true;
+                            }
+                        }
+                        if(addEdge) {
                             console.log('Adding edge');
                             edges.push(new_edge);
                         }

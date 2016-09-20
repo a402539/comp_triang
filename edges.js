@@ -57,8 +57,9 @@ var Edges = (function() {
     function crossesEdges(new_edge, edges, points) {
         for(var i = 0; i < edges.length; ++i) {
             var e = edges[i];
-            if(edgesCross(new_edge, e, points)) {
-                return e;
+            var p = edgesCross(new_edge, e, points);
+            if(p) {
+                return [e,p];
             }
         }
         return false;
