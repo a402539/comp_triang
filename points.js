@@ -30,7 +30,6 @@ var Points = (function() {
             }
             stack.push(i);
         }
-        console.log('HH size: ' + stack.length);
         return stack;
     }
     function convexHull(points) {
@@ -42,7 +41,6 @@ var Points = (function() {
         halfHull(points, false).reverse().forEach(function(pt) {
             chPoints.push(pt);
         });
-        console.log('CH size: ' + chPoints.length);
         return chPoints;
     }
 

@@ -39,6 +39,14 @@
         return chEdges;
     }
 
+    function getAllEdges() {
+        var a = [];
+        function pushEdgeToA(e) { a.push(e); }
+        edges.forEach(pushEdgeToA);
+        chEdges.forEach(pushEdgeToA);
+        return a;
+    }
+
     document.getElementById('clear').addEventListener('click', function(evt) {
         clear();
     });
@@ -71,21 +79,14 @@
             context.clearRect(0, 0, canvas.width, canvas.height);
         })();
         chPoints = Points.convexHull(points);
-        console.log('CH size1: ' + chPoints.length);
-        console.dir(chPoints);
         chEdges = getCHEdges(chPoints);
-        console.log('CH size2: ' + chPoints.length);
         console.log('drawing');
         for(var i = 0; i < points.length; ++i) {
             var point = points[i];
             drawPoint(context, point.x, point.y, 'green');
         }
         for(var i = 0; i < chPoints.length; ++i) {
-            console.log('Finding CH point ' + i);
-            console.dir(chPoints);
-            console.log(' => points[' + chPoints[i] + ']');
             var pt = points[chPoints[i]];
-            console.log('CH point: ' + Points.toString(pt));
             drawPoint(context, pt.x, pt.y, 'blue');
         }
         for(var i = 0; i < edges.length; ++i) {
@@ -233,6 +234,25 @@
         }            
     }
 
+    function selectCHPoint(p) {
+        var clicked_point = findClickedPoint(p);
+        if(clicked_point > -1) {
+            if(clicked_point === selected_point) {
+                console.log('Unselecting point');
+                selected_point = -1;
+            } else if(selected_point === -1 &&
+                      chPoints.indexOf(clicked_point) !== -1) {
+                console.log('Selecting point ' + clicked_point);
+                console.log(chPoints);
+                selected_point = clicked_point;
+            } else {
+                console.log('Invalid point');
+            }
+        } else {
+            console.log('No point clicked');
+        }        
+    }
+
     canvas.addEventListener('click', function(evt) {
         getRadioValue();
         var p = getMousePos(canvas, evt);
@@ -241,9 +261,20 @@
             addPoint(p);
         } else if(add === 'add_edges') {
             addEdge(p);
+        } else if(add === 'select_ch_point') {
+            selectCHPoint(p);
         } else {
             console.error('Invalid add_group value');
         }
         draw();
     });
+
+    var inputNodeList = document.querySelectorAll('input');
+    for(var i = 0; i < inputNodeList.length; ++i) {
+        var e = inputNodeList[i];
+        e.addEventListener('click', function(evt) {
+            selected_point = -1;
+            draw();
+        });
+    }
 })();
