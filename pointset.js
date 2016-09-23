@@ -103,6 +103,10 @@ var PointSet = (function() {
         if(this.chPoints.indexOf(this.selected_point) === -1 ||
            other.chPoints.indexOf(other.selected_point) === -1) {
             console.log('Check: Must select a _CH_ point in both sets');
+            console.log('this.chPoints:  ', this.chPoints,
+                        ', selected', this.selected_point);
+            console.log('other.chPoints: ', other.chPoints,
+                        ', selected', other.selected_point);
             return false;
         }
         if(this.points.length !== other.points.length) {
@@ -223,6 +227,7 @@ var PointSet = (function() {
             }
             s += '' + edge[0] + ',' + edge[1];
         });
+        s += ';' + this.selected_point;
         return s;
     };
     pointSet.prototype.fromString = function(s) {
@@ -235,15 +240,21 @@ var PointSet = (function() {
             if(s) {
                 console.log('Restoring: ', s);
                 var xy = s.split(',');
-                return {x: xy[0], y: xy[1]};
+                return {x: parseFloat(xy[0]),
+                        y: parseFloat(xy[1])};
             }
         }).filter(function(point) { return point !== undefined; });
+        function parseIntBaseTen(s) {
+            return parseInt(s, 10);
+        }
         this.edges = parts[1].split('_').map(function(s) {
             if(s) {
                 console.log('Restoring: ', s);
-                return s.split(',');
+                return s.split(',').map(parseIntBaseTen);
             }
         }).filter(function(point) { return point !== undefined; });
+        var radix = 10;
+        this.selected_point = parseIntBaseTen(parts[2]);
         this.convexHull();
     };
     

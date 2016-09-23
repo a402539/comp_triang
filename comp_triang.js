@@ -265,7 +265,7 @@
         if(url.indexOf('?') !== -1) {
             var states = url.split('?')[1].split('|');
             pointSets[0].fromString(states[0]);
-            //pointSets[1].fromString(states[1]);
+            pointSets[1].fromString(states[1]);
         }
 
         var useCapture = false;
