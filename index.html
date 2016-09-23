@@ -7,14 +7,17 @@
       body {
         margin: 0;
         padding: 0;
+        overflow: hidden;
       }
       canvas {
         border: 1px black solid;
+        width: 49.5%;
       }
     </style>
   </head>
   <body>
     <canvas id="c1" width="950" height="650"></canvas>
+    <canvas id="c2" width="950" height="650"></canvas>
     <br>
     <input id="add_points" type="radio" name="add_group"
            value="add_points" checked>
@@ -29,5 +32,6 @@
   </body>
   <script src="points.js"></script>
   <script src="edges.js"></script>
+  <script src="pointset.js"></script>
   <script src="comp_triang.js"></script>
 </html>

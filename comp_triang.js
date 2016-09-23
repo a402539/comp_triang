@@ -4,12 +4,8 @@
     var pointRadius = 5;
     var clickBox = 60;
     
-    var canvases = [document.getElementById('c1')];
-
-    var contexts = [];
-    canvases.forEach(function(canvas) {
-        contexts.push(canvas.getContext('2d'));
-    });
+    var pointSets = [new PointSet.create(document.getElementById('c1')),
+                     new PointSet.create(document.getElementById('c2'))];
 
     var add = null;
     function getRadioValue() {
@@ -17,42 +13,12 @@
         console.log('Radio value: ' + add);
     }
     getRadioValue();
-    
-    var points = [];
-    var chPoints = [];
-    var selected_point = -1;
-    var edges = [];
-    var chEdges = [];
-
-    function clear() {
-        points = [];
-        chPoints = [];
-        selected_point = -1;
-        edges = [];
-        chEdges = [];
-        drawAll();
-    }
-
-    function getCHEdges(chPoints) {
-        var chEdges = [];
-        for(var i = 1; i < chPoints.length; ++i) {
-            var pt1 = chPoints[i-1];
-            var pt2 = chPoints[i];
-            chEdges.push([pt1, pt2]);
-        }
-        return chEdges;
-    }
-
-    function getAllEdges() {
-        var a = [];
-        function pushEdgeToA(e) { a.push(e); }
-        edges.forEach(pushEdgeToA);
-        chEdges.forEach(pushEdgeToA);
-        return a;
-    }
 
     document.getElementById('clear').addEventListener('click', function(evt) {
-        clear();
+        pointSets.forEach(function(pointSet) {
+            pointSet.clear();
+            draw(pointSet);
+        });
     });
 
     function drawPoint(context, x, y, color) {
@@ -77,18 +43,18 @@
         context.stroke();
     }
 
-    function drawAll() {
-        contexts.forEach(function(context) {
-            draw(context);
-        });
-    }
-    function draw(context) {
+    function draw(pointSet) {
+        var context = pointSet.context;
         (function() {
             console.log('clearing');
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
         })();
-        chPoints = Points.convexHull(points);
-        chEdges = getCHEdges(chPoints);
+        pointSet.convexHull();
+        var points = pointSet.points;
+        var chPoints = pointSet.chPoints;
+        var edges = pointSet.edges;
+        var chEdges = pointSet.chEdges;
+        var selected_point = pointSet.selected_point;
         console.log('drawing');
         for(var i = 0; i < points.length; ++i) {
             var point = points[i];
@@ -128,8 +94,9 @@
     function sqrDistance(a, b) {
         return Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2);
     }
-
-    function findClickedPoint(p) {
+    
+    findClickedPoint = function(p, pointSet) {
+        var points = pointSet.points;
         var threshold = Math.pow(pointRadius, 2) + clickBox;
         console.log('=== clicked point check')
         for(var i = 0; i < points.length; ++i) {
@@ -147,44 +114,31 @@
         return -1;
     }
 
-    function removePoint(index) {
-        var new_edges = [];
-        for(var i = 0; i < edges.length; ++i) {
-            var e = edges[i];
-            if(e[0] === index || e[1] === index) {
-                console.log('Deleting edge ' + i);
-            } else {
-                new_edges.push(e);
-            }
-        }
-        edges = new_edges;
-        points.splice(index, 1);
-        if(selected_point === index) {
-            selected_point = -1;
-        }
-    }
-
-    function addPoint(p) {
-        var clicked_point = findClickedPoint(p);
+    function addPoint(p, pointSet) {
+        var clicked_point = findClickedPoint(p, pointSet);
         console.log('Clicked point: ' + clicked_point);
         if(clicked_point > -1) {
             console.log('deleting point');
-            removePoint(clicked_point);
+            pointSet.removePoint(clicked_point);
         } else {
-            points.push(p);
-            Points.sortPoints(points);
+            pointSet.points.push(p);
+            Points.sortPoints(pointSet.points);
         }
     }
 
-    function addEdge(p) {
-        var clicked_point = findClickedPoint(p);
+    function addEdge(p, pointSet) {
+        var selected_point = pointSet.selected_point;
+        var clicked_point = findClickedPoint(p, pointSet);
+        var edges = pointSet.edges;
+        var chPoints = pointSet.chPoints;
+        var points = pointSet.points;
         if(clicked_point > -1) {
             if(clicked_point === selected_point) {
                 console.log('Unselecting point');
-                selected_point = -1;
+                pointSet.unselectPoint();
             } else if(selected_point === -1) {
                 console.log('Selecting point');
-                selected_point = clicked_point;
+                pointSet.selectPoint(clicked_point);
             } else {
                 var new_edge = [selected_point, clicked_point];
                 new_edge.sort(function(a,b) { return a - b; } );
@@ -201,7 +155,7 @@
                 }
                 if(found > -1) {
                     console.log('Deleting edge');
-                    edges.splice(found, 1);
+                    pointSet.removeEdge(found);
                 } else {
                     console.log('=== CH check for ' + new_edge);
                     var pt1 = new_edge[0];
@@ -240,17 +194,18 @@
         }            
     }
 
-    function selectCHPoint(p) {
-        var clicked_point = findClickedPoint(p);
+    function selectCHPoint(p, pointSet) {
+        var selected_point = pointSet.selected_point;
+        var chPoints = pointSet.chPoints;
+        var clicked_point = findClickedPoint(p, pointSet);
         if(clicked_point > -1) {
             if(clicked_point === selected_point) {
                 console.log('Unselecting point');
-                selected_point = -1;
+                pointSet.unselectPoint();
             } else if(selected_point === -1 &&
                       chPoints.indexOf(clicked_point) !== -1) {
                 console.log('Selecting point ' + clicked_point);
-                console.log(chPoints);
-                selected_point = clicked_point;
+                pointSet.selectPoint(clicked_point);
             } else {
                 console.log('Invalid point');
             }
@@ -259,21 +214,21 @@
         }        
     }
 
-    canvases.forEach(function(canvas) {
-        canvas.addEventListener('click', function(evt) {
+    pointSets.forEach(function(pointSet) {
+        pointSet.canvas.addEventListener('click', function(evt) {
             getRadioValue();
-            var p = getMousePos(canvas, evt);
+            var p = getMousePos(pointSet.canvas, evt);
             console.log('click at (' + p.x + ',' + p.y + ')');
             if(add === 'add_points') {
-                addPoint(p);
+                addPoint(p, pointSet);
             } else if(add === 'add_edges') {
-                addEdge(p);
+                addEdge(p, pointSet);
             } else if(add === 'select_ch_point') {
-                selectCHPoint(p);
+                selectCHPoint(p, pointSet);
             } else {
                 console.error('Invalid add_group value');
             }
-            drawAll();
+            draw(pointSet);
         });
     });
 
@@ -281,8 +236,36 @@
     for(var i = 0; i < inputNodeList.length; ++i) {
         var e = inputNodeList[i];
         e.addEventListener('click', function(evt) {
-            selected_point = -1;
-            drawAll();
+            pointSets.forEach(function(pointSet) {
+                pointSet.unselectPoint();
+                draw(pointSet);
+            });
         });
     }
+
+    function resize() {
+        pointSets.forEach(function(pointSet) {
+            pointSet.canvas.width = window.innerWidth / 2;
+            draw(pointSet);
+        });
+    }
+
+    function onLoad() {
+        var useCapture = false;
+        window.addEventListener('resize', resize, useCapture);
+        resize();
+    }
+
+    (function setupOnLoad() {
+        var fn = function() {};
+        
+        if(typeof window.onload === 'function') {
+            fn = window.onload;
+        }
+        
+        window.onload = function() {
+            onLoad();
+            fn();
+        }
+    })();
 })();
