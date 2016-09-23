@@ -1,11 +1,15 @@
-"use strict";
+//"use strict";
 (function() {
     // configuration
     var pointRadius = 5;
     var clickBox = 60;
     
-    var canvas = document.getElementById('c');
-    var context = canvas.getContext('2d');
+    var canvases = [document.getElementById('c1')];
+
+    var contexts = [];
+    canvases.forEach(function(canvas) {
+        contexts.push(canvas.getContext('2d'));
+    });
 
     var add = null;
     function getRadioValue() {
@@ -26,7 +30,7 @@
         selected_point = -1;
         edges = [];
         chEdges = [];
-        draw();
+        drawAll();
     }
 
     function getCHEdges(chPoints) {
@@ -73,10 +77,15 @@
         context.stroke();
     }
 
-    function draw() {
+    function drawAll() {
+        contexts.forEach(function(context) {
+            draw(context);
+        });
+    }
+    function draw(context) {
         (function() {
             console.log('clearing');
-            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
         })();
         chPoints = Points.convexHull(points);
         chEdges = getCHEdges(chPoints);
@@ -250,20 +259,22 @@
         }        
     }
 
-    canvas.addEventListener('click', function(evt) {
-        getRadioValue();
-        var p = getMousePos(canvas, evt);
-        console.log('click at (' + p.x + ',' + p.y + ')');
-        if(add === 'add_points') {
-            addPoint(p);
-        } else if(add === 'add_edges') {
-            addEdge(p);
-        } else if(add === 'select_ch_point') {
-            selectCHPoint(p);
-        } else {
-            console.error('Invalid add_group value');
-        }
-        draw();
+    canvases.forEach(function(canvas) {
+        canvas.addEventListener('click', function(evt) {
+            getRadioValue();
+            var p = getMousePos(canvas, evt);
+            console.log('click at (' + p.x + ',' + p.y + ')');
+            if(add === 'add_points') {
+                addPoint(p);
+            } else if(add === 'add_edges') {
+                addEdge(p);
+            } else if(add === 'select_ch_point') {
+                selectCHPoint(p);
+            } else {
+                console.error('Invalid add_group value');
+            }
+            drawAll();
+        });
     });
 
     var inputNodeList = document.querySelectorAll('input');
@@ -271,7 +282,7 @@
         var e = inputNodeList[i];
         e.addEventListener('click', function(evt) {
             selected_point = -1;
-            draw();
+            drawAll();
         });
     }
 })();
