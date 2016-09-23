@@ -7,6 +7,14 @@
     var pointSets = [new PointSet.create(document.getElementById('c1')),
                      new PointSet.create(document.getElementById('c2'))];
 
+    function saveState() {
+        var state = null;
+        var title = null;
+        var url = document.location.toString().split('?')[0];
+        url += '?' + pointSets[0].toString() + '|' + pointSets[1].toString();
+        history.pushState(state, title, url);
+    }
+
     var add = null;
     function getRadioValue() {
         add = document.querySelector('input[name="add_group"]:checked').value;
@@ -50,6 +58,8 @@
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
         })();
         pointSet.convexHull();
+        console.log('pointSet: ', pointSet.toString());
+        saveState();
         var points = pointSet.points;
         var chPoints = pointSet.chPoints;
         var edges = pointSet.edges;
@@ -250,6 +260,14 @@
     }
 
     function onLoad() {
+        // restore state
+        var url = document.location.toString();
+        if(url.indexOf('?') !== -1) {
+            var states = url.split('?')[1].split('|');
+            pointSets[0].fromString(states[0]);
+            //pointSets[1].fromString(states[1]);
+        }
+
         var useCapture = false;
         window.addEventListener('resize', resize, useCapture);
         resize();

@@ -56,6 +56,45 @@ var PointSet = (function() {
     pointSet.prototype.removeEdge = function(index) {
         this.edges.splice(index, 1);
     };
+    pointSet.prototype.getNeighbours = function(p) {
+        var edges = this.edges;
+        var points = this.points;
+        var point = points[p];
+        var neighbours = [];
+        for(var i = 0; i < edges.length; ++i) {
+            var e = edges[i];
+            var ei = e.indexOf(p);
+            if(ei !== -1) {
+                var q = (ei + 1) % 2;
+                neighbours.push(q);
+            }
+        }
+        neighbours.sort(function(a,b) {
+            var pta = points[a];
+            //          pta
+            //          /|  da = Math.sqrt(dxa*dxa + dya*dya)
+            //         / |
+            //     da /  |  dya = Math.abs(pta.y - point.y)
+            //       / ta|
+            //      /_)__|
+            // point  dxa = Math.abs(pta.x - point.x)
+            //               ta = Math.asin(dya / da)
+            var dxa = Math.abs(pta.x - point.x);
+            var dya = Math.abs(pta.y - point.y);
+            var da = Math.sqrt(dxa*dxa + dya*dya);
+            var ta = Math.asin(dya / da);
+            
+            // And similarly for ptb.
+            var ptb = points[b];
+            var dxb = Math.abs(ptb.x - point.x);
+            var dyb = Math.abs(ptb.y - point.y);
+            var db = Math.sqrt(dxb*dxb + dyb*dyb);
+            var tb = Math.asin(dyb / db);
+
+            return ta - tb;
+        });
+        return neighbours;
+    };
     pointSet.prototype.checkCompatible = function(other) {
         if(this.selected_point === -1 || other.selectedPoint === -1) {
             console.log('Check: Must select a point in both sets');
@@ -78,13 +117,16 @@ var PointSet = (function() {
         // Initial labels
         this.labels = [];
         other.labels = [];
+        var this_to_other = [];
         for(var i = 0; i < this.points.length; ++i) {
             this.labels[i] = null;
             other.labels[i] = null;
+            this_to_other[i] = null;
         }
         var next_label = 1;
         this.labels[this.selected_point] = next_label;
         other.labels[other.selected_point] = next_label++;
+        this_to_other[this.selected_point] = other.selected_point;
         //////////////////////////////////////////////////////////////////////
         // ch labels
         function removeDuplicates(a) {
@@ -117,7 +159,8 @@ var PointSet = (function() {
             console.log('i: ', i);
             console.log('this_chPoints.length: ', this_chPoints.length);
             var this_i = this_chPoints[(i + this_start) % this_chPoints.length];
-            var other_i = other_chPoints[(i + other_start) % other_chPoints.length];
+            var other_i = other_chPoints[(i + other_start) %
+                                         other_chPoints.length];
             console.log('this_i:  ', this_i);
             console.log('other_i: ', other_i);
             if(this.labels[this_i]) {
@@ -125,14 +168,83 @@ var PointSet = (function() {
             } else {
                 this.labels[this_i] = next_label;
                 other.labels[other_i] = next_label++;
+                this_to_other[this_i] = other_i;
             }
         }
         console.log('This labels:  ', this.labels);
         console.log('Other labels: ', other.labels);
+        if(this.labels.indexOf(null) === -1 &&
+           other.labels.indexOf(null) === -1) {
+            return true;
+        }
         //////////////////////////////////////////////////////////////////////
         // other labels
-        // TODO
+        var done = [];
+        for(var i = 0; i < this.points.length; ++i) {
+            done.push(false);
+        }
+        while(done.indexOf(false) !== -1) {
+            var first_index = done.indexOf(false);
+            var last_index = done.lastIndexOf(false);
+            for(var i = first_index; i <= last_index; ++i) {
+                if(done[i]) continue;
+                if(!this.labels[i]) continue;
+                if(this_to_other[i] === null) {
+                    console.error('Missing mapping: ', i);
+                    console.error('this_to_other:   ', this_to_other);
+                    console.error('this.labels:     ', this.labels);
+                    console.error('other.labels:    ', other.labels);
+                    return false;
+                }
+                var other_i = this_to_other[i];
+                var this_neighbours = this.getNeighbours(i);
+                var other_neighbours = other.getNeighbours(i);
+                console.log('this_neighbours:  ', this_neighbours);
+                console.log('other_neighbours: ', other_neighbours);
+                return false;
+            }
+        }
         return true;
+    };
+    pointSet.prototype.toString = function() {
+        var s = '';
+        var points = this.points;
+        var edges = this.edges;
+        this.points.forEach(function(point) {
+            if(point !== points[0]) {
+                s += '_';
+            }
+            s += '' + point.x + ',' + point.y;
+        });
+        s += ';';
+        this.edges.forEach(function(edge) {
+            if(edge !== edges[0]) {
+                s += '_';
+            }
+            s += '' + edge[0] + ',' + edge[1];
+        });
+        return s;
+    };
+    pointSet.prototype.fromString = function(s) {
+        this.clear();
+        if(s.indexOf('|') !== -1) {
+            s = s.split('|')[0];
+        }
+        var parts = s.split(';');
+        this.points = parts[0].split('_').map(function(s) {
+            if(s) {
+                console.log('Restoring: ', s);
+                var xy = s.split(',');
+                return {x: xy[0], y: xy[1]};
+            }
+        }).filter(function(point) { return point !== undefined; });
+        this.edges = parts[1].split('_').map(function(s) {
+            if(s) {
+                console.log('Restoring: ', s);
+                return s.split(',');
+            }
+        }).filter(function(point) { return point !== undefined; });
+        this.convexHull();
     };
     
     return {create:pointSet};
