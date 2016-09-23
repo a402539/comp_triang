@@ -194,16 +194,13 @@
                     console.log('Deleting edge');
                     edges.splice(found, 1);
                 } else {
-                    var pt1 = points[new_edge[0]];
-                    var pt2 = points[new_edge[1]];
-                    console.log('=== CH check');
-                    var pts = Points.toString;
-                    console.log('pt1: ' + pts(pt1) + ', pt2: ' + pts(pt2));
+                    console.log('=== CH check for ' + new_edge);
+                    var pt1 = new_edge[0];
+                    var pt2 = new_edge[1];
                     var onCH = false;
                     for(var i = 1; i < chPoints.length; ++i) {
                         var ch1 = chPoints[i-1];
                         var ch2 = chPoints[i];
-                        console.log('ch1: ' + pts(ch1) + ', ch2: ' + pts(ch2));
                         if(pt1 === ch1 && pt2 === ch2 ||
                            pt1 === ch2 && pt2 ===ch1) {
                             console.log('Added edge on CH');
