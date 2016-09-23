@@ -202,8 +202,7 @@
             if(clicked_point === selected_point) {
                 console.log('Unselecting point');
                 pointSet.unselectPoint();
-            } else if(selected_point === -1 &&
-                      chPoints.indexOf(clicked_point) !== -1) {
+            } else if(chPoints.indexOf(clicked_point) !== -1) {
                 console.log('Selecting point ' + clicked_point);
                 pointSet.selectPoint(clicked_point);
             } else {
