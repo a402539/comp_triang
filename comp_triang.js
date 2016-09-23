@@ -1,4 +1,4 @@
-//"use strict";
+"use strict";
 (function() {
     // configuration
     var pointRadius = 5;
@@ -105,22 +105,22 @@
         return Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2);
     }
     
-    findClickedPoint = function(p, pointSet) {
+    function findClickedPoint(p, pointSet) {
         var points = pointSet.points;
         var threshold = Math.pow(pointRadius, 2) + clickBox;
-        console.log('=== clicked point check')
+        //console.log('=== clicked point check')
         for(var i = 0; i < points.length; ++i) {
             var candidate = points[i];
-            console.log('Candidate: (' + candidate.x + ',' + candidate.y + ')');
+            //console.log('Candidate: (' + candidate.x + ',' + candidate.y + ')');
             var sqrDist = sqrDistance(p, candidate);
-            console.log('Distance: ' + sqrDist);
-            console.log('Threshold: ' + threshold);
+            //console.log('Distance: ' + sqrDist);
+            //console.log('Threshold: ' + threshold);
             if(threshold > sqrDist) {
-                console.log('===== FOUND');
+                //console.log('===== FOUND');
                 return i;
             }
         }
-        console.log('===');
+        //console.log('===');
         return -1;
     }
 
@@ -223,24 +223,6 @@
         }        
     }
 
-    pointSets.forEach(function(pointSet) {
-        pointSet.canvas.addEventListener('click', function(evt) {
-            getRadioValue();
-            var p = getMousePos(pointSet.canvas, evt);
-            console.log('click at (' + p.x + ',' + p.y + ')');
-            if(add === 'add_points') {
-                addPoint(p, pointSet);
-            } else if(add === 'add_edges') {
-                addEdge(p, pointSet);
-            } else if(add === 'select_ch_point') {
-                selectCHPoint(p, pointSet);
-            } else {
-                console.error('Invalid add_group value');
-            }
-            draw(pointSet);
-        });
-    });
-
     var inputNodeList = document.querySelectorAll('input');
     for(var i = 0; i < inputNodeList.length; ++i) {
         var e = inputNodeList[i];
@@ -285,6 +267,43 @@
             } else {
                 checkButton.style = 'color: red';
             }
+        });
+        pointSets.forEach(function(pointSet) {
+            pointSet.canvas.addEventListener('click', function(evt) {
+                getRadioValue();
+                var p = getMousePos(pointSet.canvas, evt);
+                console.log('click at (' + p.x + ',' + p.y + ')');
+                if(add === 'add_points') {
+                    addPoint(p, pointSet);
+                } else if(add === 'add_edges') {
+                    addEdge(p, pointSet);
+                } else if(add === 'select_ch_point') {
+                    selectCHPoint(p, pointSet);
+                } else {
+                    console.error('Invalid add_group value');
+                }
+                draw(pointSet);
+            });
+        });
+        var tooSoon = false;
+        pointSets.forEach(function(pointSet) {
+            pointSet.canvas.addEventListener('mousemove', function(evt) {
+                var hover_point = getMousePos(pointSet.canvas, evt);
+                var p = -1;
+                if(!tooSoon) {
+                    p = findClickedPoint(hover_point, pointSet);
+                }
+                if(p !== -1) {
+                    tooSoon = true;
+                    console.log('Hovering over point: ', p);
+                    console.log('points[', p, ']:     ', pointSet.points[p]);
+                    if(pointSet.labels[p]) {
+                        console.log('labels[', p, ']: ', pointSet.labels[p]);
+                    }
+                    var milliseconds = 1500;
+                    setTimeout(function() {tooSoon = false;}, milliseconds);
+                }
+            });
         });
     }
 

@@ -9,10 +9,11 @@ var PointSet = (function() {
             this.selected_point = -1;
             this.edges = [];
             this.chEdges = [];
+            this.labels = [];
         };
         this.clear();
     }
-    pointSet.prototype.allEdges = function() {
+    pointSet.prototype.getAllEdges = function() {
         var a = [];
         function pushEdgeToA(e) { a.push(e); }
         this.edges.forEach(pushEdgeToA);
@@ -25,7 +26,9 @@ var PointSet = (function() {
         for(var i = 1; i < this.chPoints.length; ++i) {
             var pt1 = this.chPoints[i-1];
             var pt2 = this.chPoints[i];
-            this.chEdges.push([pt1, pt2]);
+            if(pt1 !== pt2) {
+                this.chEdges.push([pt1, pt2]);
+            }
         }
     };
     pointSet.prototype.selectPoint = function(p) {
@@ -36,60 +39,81 @@ var PointSet = (function() {
     };
     pointSet.prototype.removePoint = function(index) {
         var edges = this.edges;
-        var points = this.points;
         var selected_point = this.selected_point;
         var new_edges = [];
         for(var i = 0; i < edges.length; ++i) {
             var e = edges[i];
-            if(e[0] === index || e[1] === index) {
+            if(e.indexOf(index) !== -1) {
                 console.log('Deleting edge ' + i);
+            } else if(e[0] > index || e[1] > index) {
+                var e0 = e[0];
+                var e1 = e[1];
+                if(e0 > index) e0 = e0 - 1;
+                if(e1 > index) e1 = e1 - 1;
+                if(e0 < e1) {
+                    new_edges.push([e0, e1]);
+                }
             } else {
                 new_edges.push(e);
             }
         }
         this.edges = new_edges;
-        points.splice(index, 1);
+        this.points.splice(index, 1);
         if(selected_point === index) {
             this.selected_point = -1;
         }
+        // Remove edges that are now on the convex hull
+        this.convexHull();
+        edges = this.edges;
+        new_edges = [];
+        for(var i = 0; i < edges.length; ++i) {
+            var e = edges[i];
+            if(this.chPoints.indexOf(e[0]) !== -1 &&
+               this.chPoints.indexOf(e[1]) !== -1) {
+                continue;
+            } else {
+                new_edges.push(e);
+            }
+        }
+        this.edges = new_edges;
     };
     pointSet.prototype.removeEdge = function(index) {
         this.edges.splice(index, 1);
     };
     pointSet.prototype.getNeighbours = function(p) {
-        var edges = this.edges;
+        var edges = this.getAllEdges();
         var points = this.points;
         var point = points[p];
         var neighbours = [];
+        console.log('Finding neighbours for: ', p);
         for(var i = 0; i < edges.length; ++i) {
             var e = edges[i];
             var ei = e.indexOf(p);
             if(ei !== -1) {
-                var q = (ei + 1) % 2;
+                console.log('Found: ', e);
+                var q = e[(ei + 1) % 2]
                 neighbours.push(q);
             }
         }
         neighbours.sort(function(a,b) {
             var pta = points[a];
             //          pta
-            //          /|  da = Math.sqrt(dxa*dxa + dya*dya)
+            //          /|  
             //         / |
-            //     da /  |  dya = Math.abs(pta.y - point.y)
+            //        /  |  dya = Math.abs(pta.y - point.y)
             //       / ta|
             //      /_)__|
             // point  dxa = Math.abs(pta.x - point.x)
-            //               ta = Math.asin(dya / da)
+            //               ta = Math.atan2(dya, dxa)
             var dxa = Math.abs(pta.x - point.x);
             var dya = Math.abs(pta.y - point.y);
-            var da = Math.sqrt(dxa*dxa + dya*dya);
-            var ta = Math.asin(dya / da);
+            var ta = Math.atan2(dya, dxa);
             
             // And similarly for ptb.
             var ptb = points[b];
             var dxb = Math.abs(ptb.x - point.x);
             var dyb = Math.abs(ptb.y - point.y);
-            var db = Math.sqrt(dxb*dxb + dyb*dyb);
-            var tb = Math.asin(dyb / db);
+            var tb = Math.atan2(dyb, dxb);
 
             return ta - tb;
         });
@@ -148,25 +172,12 @@ var PointSet = (function() {
         }
         var this_chPoints = removeDuplicates(this.chPoints);
         var other_chPoints = removeDuplicates(other.chPoints);
-        console.log('Initial labels');
-        console.log('This labels:  ', this.labels);
-        console.log('Other labels: ', other.labels);
-        console.log('this.chPoints:  ', this.chPoints);
-        console.log('other.chPoints: ', other.chPoints);
-        console.log('this_chPoints:  ', this_chPoints);
-        console.log('other_chPoints: ', other_chPoints);
         var this_start = this_chPoints.indexOf(this.selected_point);
         var other_start = other_chPoints.indexOf(other.selected_point);
-        console.log('this_start:  ', this_start);
-        console.log('other_start: ', other_start);
         for(var i = 1; i < this_chPoints.length; ++i) {
-            console.log('i: ', i);
-            console.log('this_chPoints.length: ', this_chPoints.length);
             var this_i = this_chPoints[(i + this_start) % this_chPoints.length];
             var other_i = other_chPoints[(i + other_start) %
                                          other_chPoints.length];
-            console.log('this_i:  ', this_i);
-            console.log('other_i: ', other_i);
             if(this.labels[this_i]) {
                 continue;
             } else {
@@ -177,6 +188,7 @@ var PointSet = (function() {
         }
         console.log('This labels:  ', this.labels);
         console.log('Other labels: ', other.labels);
+        console.log('Mapping:      ', this_to_other);
         if(this.labels.indexOf(null) === -1 &&
            other.labels.indexOf(null) === -1) {
             return true;
@@ -202,9 +214,17 @@ var PointSet = (function() {
                 }
                 var other_i = this_to_other[i];
                 var this_neighbours = this.getNeighbours(i);
-                var other_neighbours = other.getNeighbours(i);
-                console.log('this_neighbours:  ', this_neighbours);
-                console.log('other_neighbours: ', other_neighbours);
+                var other_neighbours = other.getNeighbours(other_i);
+                var this_labels = this.labels;
+                console.log('i: ', i, ', other_i: ', other_i);
+                console.log('this_neighbours:  ', this_neighbours,
+                            'labeled: ', this_neighbours.map(function(p) {
+                                return this_labels[p];
+                            }));
+                console.log('other_neighbours: ', other_neighbours,
+                            'labeled: ', other_neighbours.map(function(p) {
+                                return other.labels[p];
+                            }));
                 return false;
             }
         }
