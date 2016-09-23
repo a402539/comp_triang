@@ -18,12 +18,25 @@
     var chPoints = [];
     var selected_point = -1;
     var edges = [];
+    var chEdges = [];
 
     function clear() {
         points = [];
+        chPoints = [];
         selected_point = -1;
         edges = [];
+        chEdges = [];
         draw();
+    }
+
+    function getCHEdges(chPoints) {
+        var chEdges = [];
+        for(var i = 1; i < chPoints.length; ++i) {
+            var pt1 = chPoints[i-1];
+            var pt2 = chPoints[i];
+            chEdges.push([pt1, pt2]);
+        }
+        return chEdges;
     }
 
     document.getElementById('clear').addEventListener('click', function(evt) {
@@ -31,17 +44,24 @@
     });
 
     function drawPoint(context, x, y, color) {
+        if(!color) {
+            color = 'black';
+        }
         context.beginPath();
         context.arc(x, y, pointRadius, 0, 2 * Math.PI, false);
         context.fillStyle = color;
         context.fill();
     }
 
-    function drawEdge(context, pt1, pt2) {
+    function drawEdge(context, pt1, pt2, color) {
+        if(!color) {
+            color = 'black';
+        }
         context.beginPath();
         context.moveTo(pt1.x, pt1.y);
         context.lineTo(pt2.x, pt2.y);
         context.lineWidth = 1;
+        context.strokeStyle = color;
         context.stroke();
     }
 
@@ -51,22 +71,31 @@
             context.clearRect(0, 0, canvas.width, canvas.height);
         })();
         chPoints = Points.convexHull(points);
+        console.log('CH size1: ' + chPoints.length);
+        console.dir(chPoints);
+        chEdges = getCHEdges(chPoints);
+        console.log('CH size2: ' + chPoints.length);
         console.log('drawing');
         for(var i = 0; i < points.length; ++i) {
             var point = points[i];
             drawPoint(context, point.x, point.y, 'green');
         }
-        for(var i = 1; i < chPoints.length; ++i) {
-            var pt1 = chPoints[i-1];
-            var pt2 = chPoints[i];
-            if(i == 2) {
-                drawPoint(context, pt1.x, pt1.y, 'blue');
-            }
-            drawPoint(context, pt2.x, pt2.y, 'blue');
-            drawEdge(context, pt1, pt2);
+        for(var i = 0; i < chPoints.length; ++i) {
+            console.log('Finding CH point ' + i);
+            console.dir(chPoints);
+            console.log(' => points[' + chPoints[i] + ']');
+            var pt = points[chPoints[i]];
+            console.log('CH point: ' + Points.toString(pt));
+            drawPoint(context, pt.x, pt.y, 'blue');
         }
         for(var i = 0; i < edges.length; ++i) {
             var e = edges[i];
+            var pt1 = points[e[0]];
+            var pt2 = points[e[1]];
+            drawEdge(context, pt1, pt2);
+        }
+        for(var i = 0; i < chEdges.length; ++i) {
+            var e = chEdges[i];
             var pt1 = points[e[0]];
             var pt2 = points[e[1]];
             drawEdge(context, pt1, pt2);

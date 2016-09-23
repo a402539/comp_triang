@@ -14,19 +14,23 @@ var Points = (function() {
         return 0 > (x1 * y2 - x2 * y1);
     }
     function halfHull(points, left) {
-        if(points.length < 3) {
-            return points;
-        }
         var stack = [];
+        if(points.length < 3) {
+            for(var i = 0; i < points.length; ++i) {
+                stack.push(i);
+            }
+            return stack;
+        }
         for(var i = 0; i < points.length; ++i) {
             var p = points[i];
             while(stack.length > 1 &&
-                  isLeftTurn(stack[stack.length-2],
-                             stack[stack.length-1], p) == left) {
+                  isLeftTurn(points[stack[stack.length-2]],
+                             points[stack[stack.length-1]], p) == left) {
                 stack.pop();
             }
-            stack.push(p);
+            stack.push(i);
         }
+        console.log('HH size: ' + stack.length);
         return stack;
     }
     function convexHull(points) {
@@ -38,6 +42,7 @@ var Points = (function() {
         halfHull(points, false).reverse().forEach(function(pt) {
             chPoints.push(pt);
         });
+        console.log('CH size: ' + chPoints.length);
         return chPoints;
     }
 

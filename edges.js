@@ -73,6 +73,10 @@ var Edges = (function() {
         }
         return false;
     }
+
+    function getNeighbours(p, edges, points) {
+        // TODO
+    }
     
     return {crossesEdges:crossesEdges};
 })();
