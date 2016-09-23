@@ -13,13 +13,12 @@
         console.log('Radio value: ' + add);
     }
     getRadioValue();
+    
 
-    document.getElementById('clear').addEventListener('click', function(evt) {
-        pointSets.forEach(function(pointSet) {
-            pointSet.clear();
-            draw(pointSet);
-        });
-    });
+    var checkButton = document.getElementById('check');
+    function clearCheckButton() {
+        checkButton.style = '';
+    }
 
     function drawPoint(context, x, y, color) {
         if(!color) {
@@ -44,6 +43,7 @@
     }
 
     function draw(pointSet) {
+        clearCheckButton();
         var context = pointSet.context;
         (function() {
             console.log('clearing');
@@ -79,7 +79,7 @@
         if(selected_point > -1) {
             console.log('highlighting selected point');
             var point = points[selected_point];
-            drawPoint(context, point.x, point.y, 'red');
+            drawPoint(context, point.x, point.y, 'orange');
         }
     }
     
@@ -254,6 +254,21 @@
         var useCapture = false;
         window.addEventListener('resize', resize, useCapture);
         resize();
+
+        document.getElementById('clear').addEventListener('click', function(evt) {
+            pointSets.forEach(function(pointSet) {
+                pointSet.clear();
+                draw(pointSet);
+            });
+        });
+        checkButton.addEventListener('click', function(evt) {
+            var ret = pointSets[0].checkCompatible(pointSets[1]);
+            if(ret) {
+                checkButton.style = 'color: blue';
+            } else {
+                checkButton.style = 'color: red';
+            }
+        });
     }
 
     (function setupOnLoad() {
