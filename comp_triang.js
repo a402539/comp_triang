@@ -7,6 +7,8 @@
     var pointSets = [new PointSet.create(document.getElementById('c1')),
                      new PointSet.create(document.getElementById('c2'))];
 
+    var output = document.getElementById('output');
+
     function saveState() {
         var state = null;
         var title = null;
@@ -25,7 +27,7 @@
 
     var checkButton = document.getElementById('check');
     function clearCheckButton() {
-        checkButton.style = '';
+        output.innerHTML = '';
     }
 
     function drawPoint(context, x, y, color) {
@@ -263,9 +265,9 @@
         checkButton.addEventListener('click', function(evt) {
             var ret = pointSets[0].checkCompatible(pointSets[1]);
             if(ret) {
-                checkButton.style = 'color: blue';
+                output.innerHTML = 'Compatible!';
             } else {
-                checkButton.style = 'color: red';
+                output.innerHTML = 'Incompatible!';
             }
         });
         pointSets.forEach(function(pointSet) {
