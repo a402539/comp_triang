@@ -200,8 +200,10 @@ var PointSet = (function() {
         }
         //////////////////////////////////////////////////////////////////////
         // other labels
-        for(var i = 0; i <= this.points.length; ++i) {
+        for(var i = 0; i < this.points.length; ++i) {
             if(!this.labels[i]) {
+                console.error('Unlabeled vertex: ', i);
+                console.error('Labels: ', this.labels);
                 return 'reached unlabeled vertex.';
             }
             if(this_to_other[i] === null) {
@@ -211,6 +213,7 @@ var PointSet = (function() {
                 console.error('other.labels:    ', other.labels);
                 return 'missing mapping';
             }
+            var other_i = this_to_other[i];
             var this_neighbours = this.getNeighbours(i);
             var other_neighbours = other.getNeighbours(other_i);
             if(this_neighbours.length !== other_neighbours.length) {
@@ -227,7 +230,6 @@ var PointSet = (function() {
                 rotateArray(this_neighbours_labels);
             }
             // Other stuff
-            var other_i = this_to_other[i];
             var other_neighbours_labels = other_neighbours.map(function(p) {
                 return other.labels[p];
             });
@@ -254,6 +256,7 @@ var PointSet = (function() {
                     if(other_neighbours_labels[j] === null) {
                         this.labels[this_neighbours[j]] = next_label;
                         other.labels[other_neighbours[j]] = next_label++;
+                        this_to_other[this_neighbours[j]] = other_neighbours[j];
                     } else {
                             return 'Found vertex ' + 
                             other_neighbours_labels[j] + 
