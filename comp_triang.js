@@ -133,8 +133,7 @@
             console.log('deleting point');
             pointSet.removePoint(clicked_point);
         } else {
-            pointSet.points.push(p);
-            Points.sortPoints(pointSet.points);
+            pointSet.addPoint(p);
         }
     }
 

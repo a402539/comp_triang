@@ -13,6 +13,19 @@ var PointSet = (function() {
         };
         this.clear();
     }
+    pointSet.prototype.addPoint = function(p) {
+        var points_copy = this.points.slice(0);
+        points_copy.push(p);
+        Points.sortPoints(points_copy);
+        var i = points_copy.indexOf(p);
+        for(var j = 0; j < this.edges.length; ++j) {
+            var e = this.edges[j];
+            if(e[0] >=i) e[0] = e[0] + 1;
+            if(e[1] >=i) e[1] = e[1] + 1;
+        }
+        this.points.push(p);
+        Points.sortPoints(this.points);
+    };
     pointSet.prototype.getAllEdges = function() {
         var a = [];
         function pushEdgeToA(e) { a.push(e); }
