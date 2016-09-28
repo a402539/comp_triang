@@ -264,10 +264,10 @@
         });
         checkButton.addEventListener('click', function(evt) {
             var ret = pointSets[0].checkCompatible(pointSets[1]);
-            if(ret) {
+            if(ret === true) {
                 output.innerHTML = 'Compatible!';
             } else {
-                output.innerHTML = 'Incompatible!';
+                output.innerHTML = 'Incompatible: ' + ret;
             }
         });
         pointSets.forEach(function(pointSet) {

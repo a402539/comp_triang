@@ -80,6 +80,19 @@ var PointSet = (function() {
     pointSet.prototype.removeEdge = function(index) {
         this.edges.splice(index, 1);
     };
+    function getCircularAngle(p,q) {
+        //       q
+        //      /|  
+        //     / |
+        //    /  |  dy = q.y - p.y
+        //   / t |
+        //  /_)__|
+        // p  dx = q.x - p.x
+        var dy = q.y - p.y;
+        var dx = q.x - p.x;
+        var t = Math.atan2(dy, dx);
+        return t;
+    }
     pointSet.prototype.getNeighbours = function(p) {
         var edges = this.getAllEdges();
         var points = this.points;
@@ -96,50 +109,29 @@ var PointSet = (function() {
             }
         }
         neighbours.sort(function(a,b) {
-            var pta = points[a];
-            //          pta
-            //          /|  
-            //         / |
-            //        /  |  dya = Math.abs(pta.y - point.y)
-            //       / ta|
-            //      /_)__|
-            // point  dxa = Math.abs(pta.x - point.x)
-            //               ta = Math.atan2(dya, dxa)
-            var dxa = Math.abs(pta.x - point.x);
-            var dya = Math.abs(pta.y - point.y);
-            var ta = Math.atan2(dya, dxa);
-            
-            // And similarly for ptb.
-            var ptb = points[b];
-            var dxb = Math.abs(ptb.x - point.x);
-            var dyb = Math.abs(ptb.y - point.y);
-            var tb = Math.atan2(dyb, dxb);
-
+            var ta = getCircularAngle(point, points[a]);
+            var tb = getCircularAngle(point, points[b]);
             return ta - tb;
         });
         return neighbours;
     };
     pointSet.prototype.checkCompatible = function(other) {
         if(this.selected_point === -1 || other.selectedPoint === -1) {
-            console.log('Check: Must select a point in both sets');
-            return false;
+            return 'must select a point in both sets';
         }
         if(this.chPoints.indexOf(this.selected_point) === -1 ||
            other.chPoints.indexOf(other.selected_point) === -1) {
-            console.log('Check: Must select a _CH_ point in both sets');
             console.log('this.chPoints:  ', this.chPoints,
                         ', selected', this.selected_point);
             console.log('other.chPoints: ', other.chPoints,
                         ', selected', other.selected_point);
-            return false;
+            return 'must select a CH point in both sets';
         }
         if(this.points.length !== other.points.length) {
-            console.log('Check: Different number of points');
-            return false;
+            return 'different number of points';
         }
         if(this.chPoints.length !== other.chPoints.length) {
-            console.log('Check: Different number of _CH_ points');
-            return false;
+            return 'different number of CH points';
         }
         //////////////////////////////////////////////////////////////////////
         // Initial labels
@@ -195,41 +187,78 @@ var PointSet = (function() {
         }
         //////////////////////////////////////////////////////////////////////
         // other labels
-        var done = [];
-        for(var i = 0; i < this.points.length; ++i) {
-            done.push(false);
-        }
-        while(done.indexOf(false) !== -1) {
-            var first_index = done.indexOf(false);
-            var last_index = done.lastIndexOf(false);
-            for(var i = first_index; i <= last_index; ++i) {
-                if(done[i]) continue;
-                if(!this.labels[i]) continue;
-                if(this_to_other[i] === null) {
-                    console.error('Missing mapping: ', i);
-                    console.error('this_to_other:   ', this_to_other);
-                    console.error('this.labels:     ', this.labels);
-                    console.error('other.labels:    ', other.labels);
-                    return false;
+        for(var i = 0; i <= this.points.length; ++i) {
+            if(!this.labels[i]) {
+                return 'reached unlabeled vertex.';
+            }
+            if(this_to_other[i] === null) {
+                console.error('Missing mapping: ', i);
+                console.error('this_to_other:   ', this_to_other);
+                console.error('this.labels:     ', this.labels);
+                console.error('other.labels:    ', other.labels);
+                return 'missing mapping';
+            }
+            var this_neighbours = this.getNeighbours(i);
+            var other_neighbours = other.getNeighbours(other_i);
+            if(this_neighbours.length !== other_neighbours.length) {
+                return 'Vertex ' + this.labels[i] +
+                    ' has differing # of neighbours';
+            }
+            // This stuff
+            var this_labels = this.labels;
+            var this_neighbours_labels = this_neighbours.map(function(p) {
+                return this_labels[p];
+            });
+            while(this_neighbours_labels[0] === null) {
+                rotateArray(this_neighbours);
+                rotateArray(this_neighbours_labels);
+            }
+            // Other stuff
+            var other_i = this_to_other[i];
+            var other_neighbours_labels = other_neighbours.map(function(p) {
+                return other.labels[p];
+            });
+            var count = 0;
+            while(this_neighbours_labels[0] !== other_neighbours_labels[0]) {
+                rotateArray(other_neighbours);
+                rotateArray(other_neighbours_labels);
+                if(++count >= this_neighbours.length) {
+                    console.log('this_neighbours:  ', this_neighbours,
+                                'labeled: ', this_neighbours_labels);
+                    console.log('other_neighbours: ', other_neighbours,
+                                'labeled: ', other_neighbours_labels);
+                    return 'neighbours of vertex ' + this.labels[i] +
+                        ' don\'t match';
                 }
-                var other_i = this_to_other[i];
-                var this_neighbours = this.getNeighbours(i);
-                var other_neighbours = other.getNeighbours(other_i);
-                var this_labels = this.labels;
-                console.log('i: ', i, ', other_i: ', other_i);
-                console.log('this_neighbours:  ', this_neighbours,
-                            'labeled: ', this_neighbours.map(function(p) {
-                                return this_labels[p];
-                            }));
-                console.log('other_neighbours: ', other_neighbours,
-                            'labeled: ', other_neighbours.map(function(p) {
-                                return other.labels[p];
-                            }));
-                return false;
+            }
+            console.log('i: ', i, ', other_i: ', other_i);
+            console.log('this_neighbours:  ', this_neighbours,
+                            'labeled: ', this_neighbours_labels);
+            console.log('other_neighbours: ', other_neighbours,
+                        'labeled: ', other_neighbours_labels);
+            for(var j = 1; j < this_neighbours.length; ++j) {
+                if(this_neighbours_labels[j] === null) {
+                    if(other_neighbours_labels[j] === null) {
+                        this.labels[this_neighbours[j]] = next_label;
+                        other.labels[other_neighbours[j]] = next_label++;
+                    } else {
+                            return 'Found vertex ' + 
+                            other_neighbours_labels[j] + 
+                                ' in right graph, not labeled in left';
+                    }
+                } else if(other_neighbours_labels[j] === null) {
+                    return 'Found vertex ' + 
+                        this_neighbours_labels[j] + 
+                        ' in left graph, not labeled in right';
+                }
             }
         }
         return true;
     };
+    function rotateArray(arr) {
+        arr.push(arr.shift());
+        return arr;
+    }
     pointSet.prototype.toString = function() {
         var s = '';
         var points = this.points;
