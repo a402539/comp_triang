@@ -230,6 +230,12 @@
                 draw(pointSet);
             });
         });
+        document.getElementById('layers').addEventListener('click', function(evt) {
+            pointSets.forEach(function(pointSet) {
+                pointSet.layers();
+                draw(pointSet);
+            });
+        });
         checkButton.addEventListener('click', function(evt) {
             pointSets.forEach(function(pointSet) { draw(pointSet); });
             var ret = PointSet.checkCompatible(pointSets[0], pointSets[1]);

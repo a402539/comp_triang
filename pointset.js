@@ -424,6 +424,44 @@ var PointSet = (function() {
             }
         }
     };
+    pointSet.prototype.layers = function() {
+        console.log('============================== LAYERS');
+        var points = this.points.slice(0);
+        var mapping = [];
+        for(var i = 0; i < points.length; ++i) {
+            mapping.push(i);
+        }
+        while(points.length > 0) {
+            console.log('layers points: ', points);
+            console.log('mapping:       ', mapping);
+            var chPoints = Points.convexHull(points);
+            console.log('layers chPoints: ', chPoints);
+            // add edges
+            for(var i = 1; i < this.chPoints.length; ++i) {
+                var pt1 = mapping[chPoints[i-1]]
+                var pt2 = mapping[chPoints[i]];
+                if(pt1 !== pt2) {
+                    console.log('adding edge', pt1, pt2);
+                    this.addEdge(pt1, pt2);
+                }
+            }
+            chPoints = removeDuplicates(chPoints);
+            console.log('layers unique chPoints: ', chPoints);
+
+            // remove points
+            for(var i = 0; i < chPoints.length; ++i) {
+                var index = chPoints[i];
+                mapping.splice(index, 1);
+                points.splice(index, 1);
+                for(var j = i + 1; j < chPoints.length; ++j) {
+                    var old_index = chPoints[j];
+                    if(old_index > index) {
+                        chPoints[j] = old_index - 1;
+                    }
+                }
+            }
+        }
+    };
     
     return pointSet;
 })();
