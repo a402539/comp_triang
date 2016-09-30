@@ -176,7 +176,7 @@ var PointSet = (function() {
         return left_to_right;
     };
     function labelInternalPoints(left, right, left_to_right) {
-        var next_label = left.chPoints.length + 1;
+        var next_label = removeDuplicates(left.chPoints).length + 1;
         for(var left_i = 0; left_i < left.points.length; ++left_i) {
             if(!left.labels[left_i]) {
                 console.error('Unlabeled vertex: ', left_i);

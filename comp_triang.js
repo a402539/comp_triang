@@ -56,18 +56,15 @@
         clearCheckButton();
         var context = pointSet.context;
         (function() {
-            console.log('clearing');
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
         })();
         pointSet.convexHull();
-        console.log('pointSet: ', pointSet.toString());
         saveState();
         var points = pointSet.points;
         var chPoints = pointSet.chPoints;
         var edges = pointSet.edges;
         var chEdges = pointSet.chEdges;
         var selected_point = pointSet.selected_point;
-        console.log('drawing');
         for(var i = 0; i < points.length; ++i) {
             var point = points[i];
             drawPoint(context, point.x, point.y, 'green');
@@ -89,7 +86,6 @@
             drawEdge(context, pt1, pt2);
         }
         if(selected_point > -1) {
-            console.log('highlighting selected point');
             var point = points[selected_point];
             drawPoint(context, point.x, point.y, 'orange');
         }
@@ -110,19 +106,13 @@
     function findClickedPoint(p, pointSet) {
         var points = pointSet.points;
         var threshold = Math.pow(pointRadius, 2) + clickBox;
-        //console.log('=== clicked point check')
         for(var i = 0; i < points.length; ++i) {
             var candidate = points[i];
-            //console.log('Candidate: (' + candidate.x + ',' + candidate.y + ')');
             var sqrDist = sqrDistance(p, candidate);
-            //console.log('Distance: ' + sqrDist);
-            //console.log('Threshold: ' + threshold);
             if(threshold > sqrDist) {
-                //console.log('===== FOUND');
                 return i;
             }
         }
-        //console.log('===');
         return -1;
     }
 
@@ -133,6 +123,7 @@
             console.log('deleting point');
             pointSet.removePoint(clicked_point);
         } else {
+            console.log('adding point');
             pointSet.addPoint(p);
         }
     }
@@ -320,7 +311,7 @@
                     } else {
                         tooltip.innerHTML = 'No label';
                     }
-                    var milliseconds = 1500;
+                    var milliseconds = 500;
                     setTimeout(function() {tooSoon = false;}, milliseconds);
                 }
             });
