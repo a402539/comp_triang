@@ -249,7 +249,7 @@
 
     function onLoad() {
         // restore state
-        var url = document.location.toString();
+        var url = decodeURI(document.location.toString());
         if(url.indexOf('?') !== -1) {
             var state = url.split('?')[1];
             console.log('Reloading from state: ' + state);
