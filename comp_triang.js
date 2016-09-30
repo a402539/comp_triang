@@ -142,8 +142,14 @@
                 console.log('Selecting point');
                 pointSet.selectPoint(clicked_point);
             } else {
-                console.log('Adding edge');
-                pointSet.addEdge(selected_point, clicked_point);
+                var found = pointSet.hasEdge(selected_point, clicked_point);
+                if(found > -1) {
+                    console.log('Removing edge');
+                    pointSet.removeEdge(found);
+                } else {
+                    console.log('Adding edge');
+                    pointSet.addEdge(selected_point, clicked_point);
+                }
             }
         }            
     }
@@ -215,6 +221,12 @@
         document.getElementById('clear').addEventListener('click', function(evt) {
             pointSets.forEach(function(pointSet) {
                 pointSet.clear();
+                draw(pointSet);
+            });
+        });
+        document.getElementById('triangulate').addEventListener('click', function(evt) {
+            pointSets.forEach(function(pointSet) {
+                pointSet.triangulate();
                 draw(pointSet);
             });
         });

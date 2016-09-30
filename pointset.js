@@ -27,7 +27,7 @@ var PointSet = (function() {
         Points.sortPoints(this.points);
         this.convexHull();
     };
-    pointSet.prototype.addEdge = function(p, q) {
+    pointSet.prototype.hasEdge = function(p, q) {
         var new_edge = [p, q];
         new_edge.sort(function(a,b) { return a - b; } );
         console.log('New edge: ' + new_edge);
@@ -41,40 +41,43 @@ var PointSet = (function() {
                 break;
             }
         }
-        if(found > -1) {
-            console.log('Deleting edge');
-            pointSet.removeEdge(found);
-        } else {
-            console.log('=== CH check for ' + new_edge);
-            var pt1 = new_edge[0];
-            var pt2 = new_edge[1];
-            var onCH = false;
-            for(var i = 1; i < this.chPoints.length; ++i) {
-                var ch1 = this.chPoints[i-1];
-                var ch2 = this.chPoints[i];
-                if(pt1 === ch1 && pt2 === ch2 ||
-                   pt1 === ch2 && pt2 ===ch1) {
-                    console.log('Added edge on CH');
+        return found;
+    };
+    pointSet.prototype.addEdge = function(p, q) {
+        if(this.hasEdge(p,q) > -1) {
+            return;
+        }
+        var new_edge = [p, q];
+        new_edge.sort(function(a,b) { return a - b; } );
+        console.log('=== CH check for ' + new_edge);
+        var pt1 = new_edge[0];
+        var pt2 = new_edge[1];
+        var onCH = false;
+        for(var i = 1; i < this.chPoints.length; ++i) {
+            var ch1 = this.chPoints[i-1];
+            var ch2 = this.chPoints[i];
+            if(pt1 === ch1 && pt2 === ch2 ||
+               pt1 === ch2 && pt2 ===ch1) {
+                console.log('Added edge on CH');
                     onCH = true;
-                    break;
-                }
+                break;
             }
-            console.log('===');
-            if(!onCH) {
-                var a = Edges.crossesEdges(new_edge, this.edges, this.points);
-                if(a) {
-                    var e = a[0];
-                    var p = a[1];
-                    console.log('Crosses edge: ' + e);
-                    var p0 = this.points[e[0]];
-                    var p1 = this.points[e[1]];
-                    console.log('Between points: ', p0, ' ', p1);
-                    console.log('At point:     ' , p);
-                } else {
-                    console.log('Adding edge');
-                    this.edges.push(new_edge);
-                    this.convexHull();
-                }
+        }
+        console.log('===');
+        if(!onCH) {
+            var a = Edges.crossesEdges(new_edge, this.edges, this.points);
+            if(a) {
+                var e = a[0];
+                var p = a[1];
+                console.log('Crosses edge: ' + e);
+                var p0 = this.points[e[0]];
+                var p1 = this.points[e[1]];
+                console.log('Between points: ', p0, ' ', p1);
+                console.log('At point:     ' , p);
+            } else {
+                console.log('Adding edge');
+                this.edges.push(new_edge);
+                this.convexHull();
             }
         }
     };
@@ -413,6 +416,13 @@ var PointSet = (function() {
         var radix = 10;
         this.selected_point = parseIntBaseTen(parts[2]);
         this.convexHull();
+    };
+    pointSet.prototype.triangulate = function() {
+        for(var i = 0; i < this.points.length; ++i) {
+            for(var j = i + 1; j < this.points.length; ++j) {
+                this.addEdge(i,j);
+            }
+        }
     };
     
     return pointSet;
