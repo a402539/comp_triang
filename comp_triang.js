@@ -4,8 +4,8 @@
     var pointRadius = 5;
     var clickBox = 60;
     
-    var pointSets = [new PointSet.create(document.getElementById('c1')),
-                     new PointSet.create(document.getElementById('c2'))];
+    var pointSets = [new PointSet(document.getElementById('c1')),
+                     new PointSet(document.getElementById('c2'))];
 
     var output = document.getElementById('output');
 
@@ -242,11 +242,18 @@
         });
     }
 
+    function highlightPoint(i, pointSet) {
+        var point = pointSet.points[i];
+        drawPoint(pointSet.context, point.x, point.y, 'red');
+    }
+
     function onLoad() {
         // restore state
         var url = document.location.toString();
         if(url.indexOf('?') !== -1) {
-            var states = url.split('?')[1].split('|');
+            var state = url.split('?')[1];
+            console.log('Reloading from state: ' + state);
+            var states = state.split('|');
             pointSets[0].fromString(states[0]);
             pointSets[1].fromString(states[1]);
         }
@@ -262,15 +269,23 @@
             });
         });
         checkButton.addEventListener('click', function(evt) {
-            var ret = pointSets[0].checkCompatible(pointSets[1]);
+            pointSets.forEach(function(pointSet) { draw(pointSet); });
+            var ret = PointSet.checkCompatible(pointSets[0], pointSets[1]);
             if(ret === true) {
                 output.innerHTML = 'Compatible!';
             } else {
-                output.innerHTML = 'Incompatible: ' + ret;
+                if(typeof ret === 'string') {
+                    output.innerHTML = 'Incompatible: ' + ret;
+                } else if(ret[0]) {
+                    output.innerHTML = 'Incompatible: ' + ret[0];
+                    highlightPoint(ret[1], pointSets[0]);
+                    highlightPoint(ret[2], pointSets[1]);
+                }
             }
         });
         pointSets.forEach(function(pointSet) {
             pointSet.canvas.addEventListener('click', function(evt) {
+                pointSets.forEach(function(pointSet) { draw(pointSet); });
                 getRadioValue();
                 var p = getMousePos(pointSet.canvas, evt);
                 console.log('click at (' + p.x + ',' + p.y + ')');
@@ -298,8 +313,12 @@
                     tooSoon = true;
                     console.log('Hovering over point: ', p);
                     console.log('points[', p, ']:     ', pointSet.points[p]);
+                    var tooltip = document.getElementById('tooltip');
                     if(pointSet.labels[p]) {
                         console.log('labels[', p, ']: ', pointSet.labels[p]);
+                        tooltip.innerHTML = 'Vertex: ' + pointSet.labels[p];
+                    } else {
+                        tooltip.innerHTML = 'No label';
                     }
                     var milliseconds = 1500;
                     setTimeout(function() {tooSoon = false;}, milliseconds);

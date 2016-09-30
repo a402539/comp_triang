@@ -106,6 +106,19 @@ var PointSet = (function() {
         var t = Math.atan2(dy, dx);
         return t;
     }
+    function removeDuplicates(a) {
+        var keys = [];
+        var ob = {};
+        a.forEach(function(x) {
+            if(ob[x]) {
+                return;
+            } else {
+                keys.push(x);
+                ob[x] = true;
+            }
+        });
+        return keys;
+    }
     pointSet.prototype.getNeighbours = function(p) {
         var edges = this.getAllEdges();
         var points = this.points;
@@ -128,148 +141,144 @@ var PointSet = (function() {
         });
         return neighbours;
     };
-    pointSet.prototype.checkCompatible = function(other) {
-        if(this.selected_point === -1 || other.selectedPoint === -1) {
-            return 'must select a point in both sets';
-        }
-        if(this.chPoints.indexOf(this.selected_point) === -1 ||
-           other.chPoints.indexOf(other.selected_point) === -1) {
-            console.log('this.chPoints:  ', this.chPoints,
-                        ', selected', this.selected_point);
-            console.log('other.chPoints: ', other.chPoints,
-                        ', selected', other.selected_point);
-            return 'must select a CH point in both sets';
-        }
-        if(this.points.length !== other.points.length) {
-            return 'different number of points';
-        }
-        if(this.chPoints.length !== other.chPoints.length) {
-            return 'different number of CH points';
-        }
-        //////////////////////////////////////////////////////////////////////
-        // Initial labels
+    pointSet.prototype.isFullyLabeled = function() {
+        return this.labels.indexOf(null) === -1;
+    }
+    pointSet.prototype.clearLabels = function() {
         this.labels = [];
-        other.labels = [];
-        var this_to_other = [];
         for(var i = 0; i < this.points.length; ++i) {
             this.labels[i] = null;
-            other.labels[i] = null;
-            this_to_other[i] = null;
         }
-        var next_label = 1;
-        this.labels[this.selected_point] = next_label;
-        other.labels[other.selected_point] = next_label++;
-        this_to_other[this.selected_point] = other.selected_point;
-        //////////////////////////////////////////////////////////////////////
-        // ch labels
-        function removeDuplicates(a) {
-            var keys = [];
-            var ob = {};
-            a.forEach(function(x) {
-                if(ob[x]) {
-                    return;
-                } else {
-                    keys.push(x);
-                    ob[x] = true;
-                }
-            });
-            return keys;
-        }
-        var this_chPoints = removeDuplicates(this.chPoints);
-        var other_chPoints = removeDuplicates(other.chPoints);
-        var this_start = this_chPoints.indexOf(this.selected_point);
-        var other_start = other_chPoints.indexOf(other.selected_point);
-        for(var i = 1; i < this_chPoints.length; ++i) {
-            var this_i = this_chPoints[(i + this_start) % this_chPoints.length];
-            var other_i = other_chPoints[(i + other_start) %
-                                         other_chPoints.length];
-            if(this.labels[this_i]) {
+    };
+    function labelCHPoints(left, right) {
+        left.clearLabels();
+        right.clearLabels();
+        var left_to_right = [];
+        
+        var left_chPoints = removeDuplicates(left.chPoints);
+        var right_chPoints = removeDuplicates(right.chPoints);
+        
+        var left_start = left_chPoints.indexOf(left.selected_point);
+        var right_start = right_chPoints.indexOf(right.selected_point);
+        
+        for(var i = 0; i < left_chPoints.length; ++i) {
+            var left_i = left_chPoints[(i + left_start) % left_chPoints.length];
+            var right_i = right_chPoints[(i + right_start) %
+                                         right_chPoints.length];
+            if(left.labels[left_i]) {
                 continue;
             } else {
-                this.labels[this_i] = next_label;
-                other.labels[other_i] = next_label++;
-                this_to_other[this_i] = other_i;
+                left.labels[left_i] = i + 1;
+                right.labels[right_i] = i + 1;
+                left_to_right[left_i] = right_i;
             }
         }
-        console.log('This labels:  ', this.labels);
-        console.log('Other labels: ', other.labels);
-        console.log('Mapping:      ', this_to_other);
-        if(this.labels.indexOf(null) === -1 &&
-           other.labels.indexOf(null) === -1) {
-            return true;
-        }
-        //////////////////////////////////////////////////////////////////////
-        // other labels
-        for(var i = 0; i < this.points.length; ++i) {
-            if(!this.labels[i]) {
-                console.error('Unlabeled vertex: ', i);
-                console.error('Labels: ', this.labels);
+        return left_to_right;
+    };
+    function labelInternalPoints(left, right, left_to_right) {
+        var next_label = left.chPoints.length + 1;
+        for(var left_i = 0; left_i < left.points.length; ++left_i) {
+            if(!left.labels[left_i]) {
+                console.error('Unlabeled vertex: ', left_i);
+                console.error('Labels: ', left.labels);
                 return 'reached unlabeled vertex.';
             }
-            if(this_to_other[i] === null) {
-                console.error('Missing mapping: ', i);
-                console.error('this_to_other:   ', this_to_other);
-                console.error('this.labels:     ', this.labels);
-                console.error('other.labels:    ', other.labels);
+            if(left_to_right[left_i] === null) {
+                console.error('Missing mapping: ', left_i);
+                console.error('left_to_right:   ', left_to_right);
+                console.error('left.labels:     ', left.labels);
+                console.error('right.labels:    ', right.labels);
                 return 'missing mapping';
             }
-            var other_i = this_to_other[i];
-            var this_neighbours = this.getNeighbours(i);
-            var other_neighbours = other.getNeighbours(other_i);
-            if(this_neighbours.length !== other_neighbours.length) {
-                return 'Vertex ' + this.labels[i] +
-                    ' has differing # of neighbours';
+            var right_i = left_to_right[left_i];
+            var left_neighbours = left.getNeighbours(left_i);
+            var right_neighbours = right.getNeighbours(right_i);
+            if(left_neighbours.length !== right_neighbours.length) {
+                return ['Vertex ' + left.labels[left_i] +
+                        ' has differing # of neighbours', left_i, right_i];
             }
-            // This stuff
-            var this_labels = this.labels;
-            var this_neighbours_labels = this_neighbours.map(function(p) {
-                return this_labels[p];
+            // Left stuff
+            var left_neighbours_labels = left_neighbours.map(function(p) {
+                return left.labels[p];
             });
-            while(this_neighbours_labels[0] === null) {
-                rotateArray(this_neighbours);
-                rotateArray(this_neighbours_labels);
+            while(left_neighbours_labels[0] === null) {
+                rotateArray(left_neighbours);
+                rotateArray(left_neighbours_labels);
             }
-            // Other stuff
-            var other_neighbours_labels = other_neighbours.map(function(p) {
-                return other.labels[p];
+            // Right stuff
+            var right_neighbours_labels = right_neighbours.map(function(p) {
+                return right.labels[p];
             });
             var count = 0;
-            while(this_neighbours_labels[0] !== other_neighbours_labels[0]) {
-                rotateArray(other_neighbours);
-                rotateArray(other_neighbours_labels);
-                if(++count >= this_neighbours.length) {
-                    console.log('this_neighbours:  ', this_neighbours,
-                                'labeled: ', this_neighbours_labels);
-                    console.log('other_neighbours: ', other_neighbours,
-                                'labeled: ', other_neighbours_labels);
-                    return 'neighbours of vertex ' + this.labels[i] +
-                        ' don\'t match';
+            while(left_neighbours_labels[0] !== right_neighbours_labels[0]) {
+                rotateArray(right_neighbours);
+                rotateArray(right_neighbours_labels);
+                if(++count >= left_neighbours.length) {
+                    console.log('left_neighbours:  ', left_neighbours,
+                                'labeled: ', left_neighbours_labels);
+                    console.log('right_neighbours: ', right_neighbours,
+                                'labeled: ', right_neighbours_labels);
+                    return ['neighbours of vertex ' + left.labels[left_i] +
+                            ' don\'t match', left_i, right_i];
                 }
             }
-            console.log('i: ', i, ', other_i: ', other_i);
-            console.log('this_neighbours:  ', this_neighbours,
-                            'labeled: ', this_neighbours_labels);
-            console.log('other_neighbours: ', other_neighbours,
-                        'labeled: ', other_neighbours_labels);
-            for(var j = 1; j < this_neighbours.length; ++j) {
-                if(this_neighbours_labels[j] === null) {
-                    if(other_neighbours_labels[j] === null) {
-                        this.labels[this_neighbours[j]] = next_label;
-                        other.labels[other_neighbours[j]] = next_label++;
-                        this_to_other[this_neighbours[j]] = other_neighbours[j];
+            console.log('left_i: ', left_i, ', right_i: ', right_i);
+            console.log('left_neighbours:  ', left_neighbours,
+                            'labeled: ', left_neighbours_labels);
+            console.log('right_neighbours: ', right_neighbours,
+                        'labeled: ', right_neighbours_labels);
+            for(var j = 1; j < left_neighbours.length; ++j) {
+                var left_label = left_neighbours_labels[j];
+                var right_label = right_neighbours_labels[j];
+                
+                if(left_label === null) {
+                    if(right_label === null) {
+                        left.labels[left_neighbours[j]] = next_label;
+                        right.labels[right_neighbours[j]] = next_label++;
+                        left_to_right[left_neighbours[j]] = right_neighbours[j];
                     } else {
-                            return 'Found vertex ' + 
-                            other_neighbours_labels[j] + 
-                                ' in right graph, not labeled in left';
+                            return ['Found vertex ' + 
+                                    right_neighbours_labels[j] + 
+                                    ' in right graph, not labeled in left',
+                                    left_neighbours[j], right_neighbours[j]];
                     }
-                } else if(other_neighbours_labels[j] === null) {
-                    return 'Found vertex ' + 
-                        this_neighbours_labels[j] + 
-                        ' in left graph, not labeled in right';
+                } else if(right_neighbours_labels[j] === null) {
+                    return ['Found vertex ' + 
+                            left_neighbours_labels[j] + 
+                            ' in left graph, not labeled in right',
+                            left_neighbours[j], right_neighbours[j]];
+                } else if(left_label !== right_label) {
+                    return ['Label mistmatch!',
+                            left_neighbours[j], right_neighbours[j]];
                 }
             }
         }
         return true;
+    }
+    pointSet.checkCompatible = function(left, right) {
+        if(left.selected_point === -1 || right.selectedPoint === -1) {
+            return 'must select a point in both sets';
+        }
+        if(left.chPoints.indexOf(left.selected_point) === -1 ||
+           right.chPoints.indexOf(right.selected_point) === -1) {
+            console.log('left.chPoints:  ', left.chPoints,
+                        ', selected', left.selected_point);
+            console.log('right.chPoints: ', right.chPoints,
+                        ', selected', right.selected_point);
+            return 'must select a CH point in both sets';
+        }
+        if(left.points.length !== right.points.length) {
+            return 'different number of points';
+        }
+        if(left.chPoints.length !== right.chPoints.length) {
+            return 'different number of CH points';
+        }
+        var left_to_right = labelCHPoints(left, right);
+        
+        if(left.isFullyLabeled() && right.isFullyLabeled()) {
+            return true;
+        }
+        return labelInternalPoints(left, right, left_to_right);
     };
     function rotateArray(arr) {
         arr.push(arr.shift());
@@ -297,6 +306,9 @@ var PointSet = (function() {
     };
     pointSet.prototype.fromString = function(s) {
         this.clear();
+        if(!s) {
+            return;
+        }
         if(s.indexOf('|') !== -1) {
             s = s.split('|')[0];
         }
@@ -323,5 +335,5 @@ var PointSet = (function() {
         this.convexHull();
     };
     
-    return {create:pointSet};
+    return pointSet;
 })();
