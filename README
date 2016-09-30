@@ -9,7 +9,8 @@ Features:
  - [X] computes convex hull
  - [X] click to add edges
  - [X] click to delete edges
- - [ ] label CH point
- - [ ] two point sets
+ - [X] label CH point
+ - [X] two point sets
  - [ ] verify input is triangulated
- - [ ] check for compatibility
+ - [X] check for compatibility
+ - [X] move points
