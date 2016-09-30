@@ -142,56 +142,8 @@
                 console.log('Selecting point');
                 pointSet.selectPoint(clicked_point);
             } else {
-                var new_edge = [selected_point, clicked_point];
-                new_edge.sort(function(a,b) { return a - b; } );
-                console.log('New edge: ' + new_edge);
-                var found = -1;
-                for(var i = 0; i < edges.length; ++i) {
-                    var e = edges[i];
-                    console.log('Old edge: ' + e);
-                    if(new_edge[0] === e[0] && new_edge[1] === e[1]) {
-                        console.log('Found edge');
-                        found = i;
-                        break;
-                    }
-                }
-                if(found > -1) {
-                    console.log('Deleting edge');
-                    pointSet.removeEdge(found);
-                } else {
-                    console.log('=== CH check for ' + new_edge);
-                    var pt1 = new_edge[0];
-                    var pt2 = new_edge[1];
-                    var onCH = false;
-                    for(var i = 1; i < chPoints.length; ++i) {
-                        var ch1 = chPoints[i-1];
-                        var ch2 = chPoints[i];
-                        if(pt1 === ch1 && pt2 === ch2 ||
-                           pt1 === ch2 && pt2 ===ch1) {
-                            console.log('Added edge on CH');
-                            onCH = true;
-                            break;
-                        }
-                    }
-                    console.log('===');
-                    if(!onCH) {
-                        var a = Edges.crossesEdges(new_edge, edges, points);
-                        if(a) {
-                            var e = a[0];
-                            var p = a[1];
-                            console.log('Crosses edge: ' + e);
-                            var p0 = points[e[0]];
-                            var p1 = points[e[1]];
-                            console.log('Between points: ' +
-                                        pts(p0) + ' ' +
-                                        pts(p1));
-                            console.log('At point:     ' + pts(p));
-                        } else {
-                            console.log('Adding edge');
-                            edges.push(new_edge);
-                        }
-                    }
-                }
+                console.log('Adding edge');
+                pointSet.addEdge(selected_point, clicked_point);
             }
         }            
     }
@@ -213,6 +165,13 @@
         } else {
             console.log('No point clicked');
         }        
+    }
+
+    function movePoint(start, end, pointSet) {
+        var clicked_point = findClickedPoint(start, pointSet);
+        if(clicked_point > -1) {
+            pointSet.movePoint(clicked_point, end);
+        }
     }
 
     var inputNodeList = document.querySelectorAll('input');
@@ -275,6 +234,10 @@
             }
         });
         pointSets.forEach(function(pointSet) {
+            var start = null;
+            pointSet.canvas.addEventListener('mousedown', function(evt) {
+                start = getMousePos(pointSet.canvas, evt);
+            });
             pointSet.canvas.addEventListener('click', function(evt) {
                 pointSets.forEach(function(pointSet) { draw(pointSet); });
                 getRadioValue();
@@ -286,9 +249,13 @@
                     addEdge(p, pointSet);
                 } else if(add === 'select_ch_point') {
                     selectCHPoint(p, pointSet);
+                } else if(add === 'move_points') {
+                    console.log('Moving point from ', start, ' to ', p);
+                    movePoint(start, p, pointSet);
                 } else {
                     console.error('Invalid add_group value');
                 }
+                start = null;
                 draw(pointSet);
             });
         });

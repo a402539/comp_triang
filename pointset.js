@@ -25,6 +25,58 @@ var PointSet = (function() {
         }
         this.points.push(p);
         Points.sortPoints(this.points);
+        this.convexHull();
+    };
+    pointSet.prototype.addEdge = function(p, q) {
+        var new_edge = [p, q];
+        new_edge.sort(function(a,b) { return a - b; } );
+        console.log('New edge: ' + new_edge);
+        var found = -1;
+        for(var i = 0; i < this.edges.length; ++i) {
+            var e = this.edges[i];
+            console.log('Old edge: ' + e);
+            if(new_edge[0] === e[0] && new_edge[1] === e[1]) {
+                console.log('Found edge');
+                found = i;
+                break;
+            }
+        }
+        if(found > -1) {
+            console.log('Deleting edge');
+            pointSet.removeEdge(found);
+        } else {
+            console.log('=== CH check for ' + new_edge);
+            var pt1 = new_edge[0];
+            var pt2 = new_edge[1];
+            var onCH = false;
+            for(var i = 1; i < this.chPoints.length; ++i) {
+                var ch1 = this.chPoints[i-1];
+                var ch2 = this.chPoints[i];
+                if(pt1 === ch1 && pt2 === ch2 ||
+                   pt1 === ch2 && pt2 ===ch1) {
+                    console.log('Added edge on CH');
+                    onCH = true;
+                    break;
+                }
+            }
+            console.log('===');
+            if(!onCH) {
+                var a = Edges.crossesEdges(new_edge, this.edges, this.points);
+                if(a) {
+                    var e = a[0];
+                    var p = a[1];
+                    console.log('Crosses edge: ' + e);
+                    var p0 = this.points[e[0]];
+                    var p1 = this.points[e[1]];
+                    console.log('Between points: ', p0, ' ', p1);
+                    console.log('At point:     ' , p);
+                } else {
+                    console.log('Adding edge');
+                    this.edges.push(new_edge);
+                    this.convexHull();
+                }
+            }
+        }
     };
     pointSet.prototype.getAllEdges = function() {
         var a = [];
@@ -50,7 +102,33 @@ var PointSet = (function() {
     pointSet.prototype.unselectPoint = function() {
         this.selectPoint(-1);
     };
-    pointSet.prototype.removePoint = function(index) {
+    pointSet.prototype.movePoint = function(index, to_point) {
+        var neighbours = [];
+        for(var i = 0; i < this.edges.length; ++i) {
+            var e = this.edges[i];
+            if(e.indexOf(index) !== -1) {
+                if(e[0] === index) {
+                    neighbours.push(e[1]);
+                } else {
+                    neighbours.push(e[0]);
+                }
+            }
+        }
+        this.removePoint(index, true);
+        this.addPoint(to_point);
+        var new_index = this.points.indexOf(to_point);
+        for(var i = 0; i < neighbours.length; ++i) {
+            var neighbour = neighbours[i];
+            if(neighbour > index && neighbour <= new_index) {
+                neighbour -= 1;
+            }
+            if(neighbour < index && neighbour >= new_index) {
+                neighbour += 1;
+            }
+            this.addEdge(new_index, neighbour);
+        }
+    };
+    pointSet.prototype.removePoint = function(index, noCHcheck) {
         var edges = this.edges;
         var selected_point = this.selected_point;
         var new_edges = [];
@@ -76,19 +154,21 @@ var PointSet = (function() {
             this.selected_point = -1;
         }
         // Remove edges that are now on the convex hull
-        this.convexHull();
-        edges = this.edges;
-        new_edges = [];
-        for(var i = 0; i < edges.length; ++i) {
-            var e = edges[i];
-            if(this.chPoints.indexOf(e[0]) !== -1 &&
-               this.chPoints.indexOf(e[1]) !== -1) {
-                continue;
-            } else {
-                new_edges.push(e);
+        if(!noCHcheck) {
+            this.convexHull();
+            edges = this.edges;
+            new_edges = [];
+            for(var i = 0; i < edges.length; ++i) {
+                var e = edges[i];
+                if(this.chPoints.indexOf(e[0]) !== -1 &&
+                   this.chPoints.indexOf(e[1]) !== -1) {
+                    continue;
+                } else {
+                    new_edges.push(e);
+                }
             }
+            this.edges = new_edges;
         }
-        this.edges = new_edges;
     };
     pointSet.prototype.removeEdge = function(index) {
         this.edges.splice(index, 1);
