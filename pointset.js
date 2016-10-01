@@ -356,6 +356,12 @@ var PointSet = (function() {
         if(left.chPoints.length !== right.chPoints.length) {
             return 'different number of CH points';
         }
+        if(!left.isTriangulated()) {
+            return 'left pointset is not triangulated';
+        }
+        if(!right.isTriangulated()) {
+            return 'right pointset is not triangulated';
+        }
         var left_to_right = labelCHPoints(left, right);
         
         if(left.isFullyLabeled() && right.isFullyLabeled()) {
@@ -461,6 +467,18 @@ var PointSet = (function() {
                 }
             }
         }
+    };
+    pointSet.prototype.isTriangulated = function() {
+        var V = this.points.length;
+        var E = this.edges.length;
+        var h = this.chPoints.length;
+        
+        // # faces by euler's formula
+        var F = 2 + E - V;
+        // # triangles by Anna's rule
+        var T = 2 * V - h - 2;
+        
+        return T === F;
     };
     
     return pointSet;

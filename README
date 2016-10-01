@@ -11,7 +11,7 @@ Features:
  - [X] click to delete edges
  - [X] label CH point
  - [X] two point sets
- - [ ] verify input is triangulated
+ - [X] verify input is triangulated
  - [X] check for compatibility
  - [X] move points
  - [X] compute triangulation
