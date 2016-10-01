@@ -219,10 +219,12 @@
         resize();
 
         document.getElementById('clear').addEventListener('click', function(evt) {
-            pointSets.forEach(function(pointSet) {
-                pointSet.clear();
-                draw(pointSet);
-            });
+            if(window.confirm('Are you sure you want to clear the points?')) {
+                pointSets.forEach(function(pointSet) {
+                    pointSet.clear();
+                    draw(pointSet);
+                });
+            }
         });
         document.getElementById('triangulate').addEventListener('click', function(evt) {
             pointSets.forEach(function(pointSet) {

@@ -14,3 +14,5 @@ Features:
  - [ ] verify input is triangulated
  - [X] check for compatibility
  - [X] move points
+ - [X] compute triangulation
+ - [X] compute convex layers

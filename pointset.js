@@ -437,7 +437,7 @@ var PointSet = (function() {
             var chPoints = Points.convexHull(points);
             console.log('layers chPoints: ', chPoints);
             // add edges
-            for(var i = 1; i < this.chPoints.length; ++i) {
+            for(var i = 1; i < chPoints.length; ++i) {
                 var pt1 = mapping[chPoints[i-1]]
                 var pt2 = mapping[chPoints[i]];
                 if(pt1 !== pt2) {
